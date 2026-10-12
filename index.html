@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lanka Hospital - Hospital Management System</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --secondary: hsl(194, 89%, 55%);
+      --accent: #0d9488;
+      --danger: #e11d48;
+      --warning: #d97706;
+      --success: #16a34a;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #03132c;
+      --text-muted: #031022;
+      --border: #e2e8f0;
+      --sidebar-width: 260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+    /* AUTH SCREEN */
+    #auth-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #18e4b8 0%, #02527e 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .auth-card {
+      background: #ffffff; border-radius: 12px; padding: 2.5rem; width: 100%; max-width: 440px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    .auth-header { text-align: center; margin-bottom: 2rem; }
+    .auth-header h1 { color: var(--primary-dark); font-size: 1.8rem; font-weight: 700; margin-top: 0.5rem; }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text); }
+    .form-control {
+      width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 1rem; outline: none; transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: var(--primary); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.75rem 1.25rem; border-radius: 6px; border: none; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; font-size: 1rem;
+    }
+    .btn-primary { background: var(--primary); color:white; width: 100%; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+
+    /* LAYOUT */
+    #app-container { display: flex; width: 100%; height: 100%; }
+    
+    /* SIDEBAR */
+    #sidebar {
+      width: var(--sidebar-width); background: var(--secondary); color: white;
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .brand {
+      padding: 1.5rem; display: flex; align-items: center; gap: 0.75rem;
+      font-size: 1.25rem; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .user-profile-badge {
+      padding: 1rem 1.5rem; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--primary);
+      display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem;
+    }
+    .user-info { display: flex; flex-direction: column; overflow: hidden; }
+    .user-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .nav-menu { flex: 1; overflow-y: auto; padding: 1rem 0; list-style: none; }
+    .nav-item { margin-bottom: 0.2rem; }
+    .nav-link {
+      display: flex; align-items: center; gap: 0.85rem; padding: 0.8rem 1.5rem;
+      color: #94a3b8; text-decoration: none; font-size: 0.9rem; transition: all 0.2s; cursor: pointer;
+    }
+    .nav-link:hover, .nav-link.active { color: white; background: rgba(255,255,255,0.1); border-left: 4px solid var(--primary); }
+    .nav-link svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* MAIN CONTENT */
+    #main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    header {
+      height: 65px; background: var(--card-bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 2rem;
+    }
+    .page-title { font-size: 1.25rem; font-weight: 700; color: var(--secondary); }
+    .header-actions { display: flex; align-items: center; gap: 1rem; }
+
+    .content-area { flex: 1; overflow-y: auto; padding: 2rem; }
+
+    /* DASHBOARD GRID */
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .metric-card {
+      background: var(--card-bg); border-radius: 8px; padding: 1.25rem; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .metric-val { font-size: 1.8rem; font-weight: 700; color: var(--secondary); margin-top: 0.2rem; }
+    .metric-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .metric-icon { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+
+    /* TABLES & CARDS */
+    .card { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+    .card-title { font-size: 1.05rem; font-weight: 700; color: var(--secondary); }
+
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    .data-table th { background: #f1f5f9; padding: 0.75rem 1rem; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    .data-table td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+    .data-table tr:hover { background: #f8fafc; }
+
+    .badge { padding: 0.25rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+    .badge-success { background: #dcfce7; color: #15803d; }
+    .badge-warning { background: #fef3c7; color: #b45309; }
+    .badge-danger { background: #ffe4e6; color: #be123c; }
+    .badge-info { background: #e0f2fe; color: #0369a1; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; z-index: 2000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: var(--card-bg); border-radius: 10px; width: 100%; max-width: 650px;
+      max-height: 90vh; overflow-y: auto; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+
+    /* GRID FORM LAYOUT */
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .full-width { grid-column: span 2; }
+
+    /* PRINT LAYOUT */
+    @media print {
+      body * { visibility: hidden; }
+      #printable-area, #printable-area * { visibility: visible; }
+      #printable-area { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- AUTHENTICATION SCREEN -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <div class="auth-header">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="#0284c7"><path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.89 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+        <h1>Lanka Hospital</h1>
+      </div>
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="login-username" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Login</button>
+      </form>
+      <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted);">
+        <code>admin</code> | <code>doctor</code> | <code>nurse</code> | <code>receptionist</code> | <code>labstaff</code> | <code>pharmacist</code> | <code>accountant</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP WRAPPER -->
+  <div id="app-container" style="display: none;">
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+      <div class="brand">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#0284c7"><path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.89 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+        <span>Lanka Hospital</span>
+      </div>
+      <div class="user-profile-badge">
+        <div class="avatar" id="user-avatar">A</div>
+        <div class="user-info">
+          <span class="user-name" id="user-display-name">System User</span>
+          <span class="user-role" id="user-display-role">Administrator</span>
+        </div>
+      </div>
+      <ul class="nav-menu" id="navigation-links">
+        <!-- Navigation Links rendered programmatically according to Access Rights -->
+      </ul>
+      <div style="padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <button class="btn btn-secondary" onclick="handleLogout()" style="width: 100%; font-size: 0.8rem;">Logout</button>
+      </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div id="main-wrapper">
+      <header>
+        <div class="page-title" id="current-view-title">Dashboard</div>
+      </header>
+
+      <div class="content-area" id="main-content">
+        <!-- Content Views dynamically injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERIC MODAL WRAPPER -->
+  <div class="modal-overlay" id="generic-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-title" class="card-title">Modal Title</h3>
+        <button class="modal-close" onclick="closeModal('generic-modal')">&times;</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- PRINT RECEIPT CONTAINER -->
+  <div id="printable-area"></div>
+
+  <script>
+    /* ==========================================================================
+       ENTERPRISE DATABASE & DEFAULT STATE
+       ========================================================================== */
+    const DEFAULT_DB = {
+      users: [
+        { id: 101, username: 'admin', passwordHash: '12345678', role: 'Administrator', name: 'Dr. Bandara (Admin)', dept: 'Management' },
+        { id: 102, username: 'doctor', passwordHash: '1234', role: 'Doctor', name: 'Dr. Kasun Fernando', dept: 'Cardiology' },
+        { id: 103, username: 'nurse', passwordHash: '1234', role: 'Nurse', name: 'Nurse Perera', dept: 'General Ward' },
+        { id: 104, username: 'receptionist', passwordHash: '1234', role: 'Receptionist', name: 'Samanthi Silva', dept: 'Front Desk' },
+        { id: 105, username: 'labstaff', passwordHash: '1234', role: 'Laboratory Staff', name: 'Kamal Jayasinghe', dept: 'Pathology' },
+        { id: 106, username: 'pharmacist', passwordHash: '1234', role: 'Pharmacist', name: 'Nimali Wickramasinghe', dept: 'Pharmacy' },
+        { id: 107, username: 'accountant', passwordHash: '1234', role: 'Accountant', name: 'Sunil Rathnayake', dept: 'Finance' }
+      ],
+      patients: [
+        { id: 'PAT-1001', name: 'K. L. Gamage', dob: '1985-06-12', gender: 'Male', phone: '0771234567', address: 'Colombo 03', bloodGroup: 'O+', emergencyContact: '0719876543' },
+        { id: 'PAT-1002', name: 'M. D. S. Gunawardena', dob: '1992-11-23', gender: 'Female', phone: '0755554433', address: 'Kandy', bloodGroup: 'A+', emergencyContact: '0773332211' }
+      ],
+      doctors: [
+        { id: 'DOC-101', name: 'Dr. Kasun Fernando', dept: 'Cardiology', schedule: 'Mon-Fri 08:00-14:00', fee: 2500 },
+        { id: 'DOC-102', name: 'Dr. Anusha De Silva', dept: 'Neurology', schedule: 'Tue-Sat 10:00-16:00', fee: 3000 }
+      ],
+      appointments: [
+        { id: 'APT-501', patientId: 'PAT-1001', patientName: 'K. L. Gamage', doctorId: 'DOC-101', doctorName: 'Dr. Kasun Fernando', date: '2026-10-02', time: '09:30', status: 'Scheduled' }
+      ],
+      medicalRecords: [
+        { id: 'EMR-901', patientId: 'PAT-1001', doctorName: 'Dr. Kasun Fernando', date: '2026-09-28', diagnosis: 'Essential Hypertension', notes: 'Patient reports mild headaches. BP 140/90.', prescription: 'Amlodipine 5mg Daily', labTestsRequested: 'Lipid Profile' }
+      ],
+      labTests: [
+        { id: 'LAB-301', patientId: 'PAT-1001', patientName: 'K. L. Gamage', testName: 'Lipid Profile', status: 'Completed', result: 'Serum Cholesterol: 210 mg/dL (Elevated), Triglycerides: 150 mg/dL', date: '2026-09-29' }
+      ],
+      pharmacy: [
+        { id: 'MED-801', name: 'Paracetamol 500mg', batch: 'B9081', stock: 1200, unitPrice: 10, expiry: '2027-12-31' },
+        { id: 'MED-802', name: 'Amlodipine 5mg', batch: 'B3321', stock: 450, unitPrice: 25, expiry: '2027-08-15' },
+        { id: 'MED-803', name: 'Amoxicillin 500mg', batch: 'B1102', stock: 80, unitPrice: 40, expiry: '2026-11-30' }
+      ],
+      billing: [
+        { id: 'INV-201', patientId: 'PAT-1001', patientName: 'K. L. Gamage', date: '2026-09-29', consultationFee: 2500, labFee: 1500, pharmacyFee: 250, admissionFee: 0, total: 4250, status: 'Paid' }
+      ],
+      employees: [
+        { id: 'EMP-01', name: 'Kamal Jayasinghe', role: 'Laboratory Staff', status: 'Present', leaveDays: 2 },
+        { id: 'EMP-02', name: 'Samanthi Silva', role: 'Receptionist', status: 'Present', leaveDays: 0 }
+      ]
+    };
+
+    let DB = JSON.parse(localStorage.getItem('MEDICARE_PRO_DB')) || DEFAULT_DB;
+    let currentUser = null;
+
+    function saveDB(actionMessage) {
+      if (actionMessage && currentUser) {
+        DB.auditLogs.unshift({
+          timestamp: new Date().toLocaleString(),
+          user: currentUser.username,
+          action: actionMessage
+        });
+      }
+      localStorage.setItem('MEDICARE_PRO_DB', JSON.stringify(DB));
+    }
+
+    /* ==========================================================================
+       AUTHENTICATION & ROLE-BASED ACCESS CONTROL (RBAC)
+       ========================================================================== */
+    const ROLE_PERMISSIONS = {
+      'Administrator': ['dashboard', 'users', 'patients', 'doctors', 'appointments', 'emr', 'lab', 'pharmacy', 'billing', 'staff', 'reports', 'audit'],
+      'Doctor': ['dashboard', 'patients', 'appointments', 'emr', 'lab'],
+      'Nurse': ['dashboard', 'patients', 'appointments', 'emr', 'staff'],
+      'Receptionist': ['dashboard', 'patients', 'appointments', 'billing'],
+      'Laboratory Staff': ['dashboard', 'patients', 'lab'],
+      'Pharmacist': ['dashboard', 'pharmacy'],
+      'Accountant': ['dashboard', 'billing', 'reports']
+    };
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-username').value.trim();
+      const p = document.getElementById('login-password').value.trim();
+
+      const user = DB.users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.passwordHash === p);
+
+      if (user) {
+        currentUser = user;
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-container').style.display = 'flex';
+        document.getElementById('user-avatar').innerText = user.name.charAt(0);
+        document.getElementById('user-display-name').innerText = user.name;
+        document.getElementById('user-display-role').innerText = user.role;
+
+        renderNavigation();
+        navigateTo('dashboard');
+        saveDB(`User Login Successful (${user.username})`);
+      } else {
+        alert('Invalid Username or Password.');
+      }
+    }
+
+    function handleLogout() {
+      if (currentUser) saveDB(`User Logout (${currentUser.username})`);
+      currentUser = null;
+      document.getElementById('app-container').style.display = 'none';
+      document.getElementById('auth-screen').style.display = 'flex';
+      document.getElementById('login-form').reset();
+    }
+
+    function handleChangePassword(e) {
+      e.preventDefault();
+      const curr = document.getElementById('curr-pass').value;
+      const next = document.getElementById('new-pass').value;
+
+      if (currentUser.passwordHash !== curr) {
+        alert('Current password incorrect!');
+        return;
+      }
+      const userIdx = DB.users.findIndex(u => u.id === currentUser.id);
+      DB.users[userIdx].passwordHash = next;
+      currentUser.passwordHash = next;
+      saveDB('Updated Password');
+      closeModal('password-modal');
+      alert('Password updated successfully.');
+    }
+
+    function renderNavigation() {
+      const allowedViews = ROLE_PERMISSIONS[currentUser.role] || ['dashboard'];
+      const navContainer = document.getElementById('navigation-links');
+      navContainer.innerHTML = '';
+
+      const navMap = [
+        { id: 'dashboard', label: 'Dashboard', icon: '<path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>' },
+        { id: 'users', label: 'User Management', icon: '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>' },
+        { id: 'patients', label: 'Patient Directory', icon: '<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/>' },
+        { id: 'doctors', label: 'Doctors & Schedules', icon: '<path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1c0-2 4-3.1 6-3.1s6 1.1 6 3.1v1z"/>' },
+        { id: 'appointments', label: 'Appointments', icon: '<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>' },
+        { id: 'emr', label: 'EMR & Consultations', icon: '<path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>' },
+        { id: 'lab', label: 'Laboratory Module', icon: '<path d="M7 2v2h1v5.2L3.16 17.15C2.43 18.23 3.2 19.7 4.51 19.7h14.97c1.31 0 2.08-1.47 1.36-2.55L16 9.2V4h1V2H7zm4 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>' },
+        { id: 'pharmacy', label: 'Pharmacy & Stock', icon: '<path d="M4.5 10.5C3.67 10.5 3 11.17 3 12s.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5h-15zM10.5 4.5C10.5 3.67 11.17 3 12 3s1.5.67 1.5 1.5v15c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5v-15z"/>' },
+        { id: 'billing', label: 'Billing & Invoicing', icon: '<path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>' },
+        { id: 'staff', label: 'Staff & HR', icon: '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/>' },
+        { id: 'reports', label: 'Analytics & Reports', icon: '<path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>' }        
+      ];
+
+      navMap.forEach(item => {
+        if (allowedViews.includes(item.id)) {
+          const li = document.createElement('li');
+          li.className = 'nav-item';
+          li.innerHTML = `
+            <a class="nav-link" id="nav-${item.id}" onclick="navigateTo('${item.id}')">
+              <svg viewBox="0 0 24 24">${item.icon}</svg>
+              <span>${item.label}</span>
+            </a>
+          `;
+          navContainer.appendChild(li);
+        }
+      });
+    }
+
+    function navigateTo(viewId) {
+      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+      const activeNav = document.getElementById(`nav-${viewId}`);
+      if (activeNav) activeNav.classList.add('active');
+
+      const titleMap = {
+        dashboard: 'Executive Dashboard', users: 'User Account Management', patients: 'Patient Directory & Registration',
+        doctors: 'Doctors Management & Schedules', appointments: 'Appointment Scheduling', emr: 'Electronic Medical Records (EMR)',
+        lab: 'Laboratory Information System', pharmacy: 'Pharmacy & Stock Inventory', billing: 'Billing & Payment Collection',
+        staff: 'Staff & Attendance Management', reports: 'System Reports & Analytics'
+      };
+
+      document.getElementById('current-view-title').innerText = titleMap[viewId] || 'Hospital Management System';
+      const container = document.getElementById('main-content');
+
+      switch (viewId) {
+        case 'dashboard': renderDashboardView(container); break;
+        case 'users': renderUsersView(container); break;
+        case 'patients': renderPatientsView(container); break;
+        case 'doctors': renderDoctorsView(container); break;
+        case 'appointments': renderAppointmentsView(container); break;
+        case 'emr': renderEMRView(container); break;
+        case 'lab': renderLabView(container); break;
+        case 'pharmacy': renderPharmacyView(container); break;
+        case 'billing': renderBillingView(container); break;
+        case 'staff': renderStaffView(container); break;
+        case 'reports': renderReportsView(container); break;
+      }
+    }
+
+    /* ==========================================================================
+       MODAL CONTROLLER
+       ========================================================================== */
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    }
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    /* ==========================================================================
+       MODULE 1: DASHBOARD
+       ========================================================================== */
+    function renderDashboardView(container) {
+      const totalRevenue = DB.billing.reduce((acc, curr) => acc + (curr.status === 'Paid' ? curr.total : 0), 0);
+      const pendingLab = DB.labTests.filter(l => l.status === 'Pending').length;
+
+      container.innerHTML = `
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div>
+              <div class="metric-label">Total Patients</div>
+              <div class="metric-val">${DB.patients.length}</div>
+            </div>
+            <div class="metric-icon" style="background:#e0f2fe; color:#0369a1;">📋</div>
+          </div>
+          <div class="metric-card">
+            <div>
+              <div class="metric-label">Appointments Today</div>
+              <div class="metric-val">${DB.appointments.length}</div>
+            </div>
+            <div class="metric-icon" style="background:#dcfce7; color:#15803d;">📅</div>
+          </div>
+          <div class="metric-card">
+            <div>
+              <div class="metric-label">Pending Lab Tests</div>
+              <div class="metric-val">${pendingLab}</div>
+            </div>
+            <div class="metric-icon" style="background:#fef3c7; color:#b45309;">🧪</div>
+          </div>
+          <div class="metric-card">
+            <div>
+              <div class="metric-label">Total Revenue</div>
+              <div class="metric-val">Rs. ${totalRevenue.toLocaleString()}</div>
+            </div>
+            <div class="metric-icon" style="background:#ccfbf1; color:#0f766e;">💳</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Recent Registered Patients</h3></div>
+          <table class="data-table">
+            <thead>
+              <tr><th>ID</th><th>Name</th><th>Gender</th><th>Contact</th><th>Emergency Contact</th></tr>
+            </thead>
+            <tbody>
+              ${DB.patients.slice(-5).map(p => `
+                <tr>
+                  <td><strong>${p.id}</strong></td>
+                  <td>${p.name}</td>
+                  <td>${p.gender}</td>
+                  <td>${p.phone}</td>
+                  <td>${p.emergencyContact}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    /* ==========================================================================
+       MODULE 2: USER MANAGEMENT
+       ========================================================================== */
+    function renderUsersView(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">System Users & Access Control</h3>
+            <button class="btn btn-primary" style="width:auto;" onclick="openAddUserModal()">+ Add New User</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>User ID</th><th>Username</th><th>Full Name</th><th>Role</th><th>Department</th></tr>
+            </thead>
+            <tbody>
+              ${DB.users.map(u => `
+                <tr>
+                  <td>${u.id}</td>
+                  <td><strong>${u.username}</strong></td>
+                  <td>${u.name}</td>
+                  <td><span class="badge badge-info">${u.role}</span></td>
+                  <td>${u.dept}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function openAddUserModal() {
+      document.getElementById('modal-title').innerText = 'Add System User';
+      document.getElementById('modal-body').innerHTML = `
+        <form onsubmit="saveUser(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" id="u-name" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="u-pass" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="u-fullname" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Role</label>
+              <select id="u-role" class="form-control">
+                <option>Administrator</option><option>Doctor</option><option>Nurse</option>
+                <option>Receptionist</option><option>Laboratory Staff</option>
+                <option>Pharmacist</option><option>Accountant</option>
+              </select>
+            </div>
+            <div class="form-group full-width">
+              <label>Department</label>
+              <input type="text" id="u-dept" class="form-control" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Create User Account</button>
+        </form>
+      `;
+      openModal('generic-modal');
+    }
+
+    function saveUser(e) {
+      e.preventDefault();
+      const newUser = {
+        id: Date.now(),
+        username: document.getElementById('u-name').value,
+        passwordHash: document.getElementById('u-pass').value,
+        name: document.getElementById('u-fullname').value,
+        role: document.getElementById('u-role').value,
+        dept: document.getElementById('u-dept').value
+      };
+      DB.users.push(newUser);
+      saveDB(`Created user: ${newUser.username}`);
+      closeModal('generic-modal');
+      navigateTo('users');
+    }
+
+    /* ==========================================================================
+       MODULE 3: PATIENT MANAGEMENT
+       ========================================================================== */
+    function renderPatientsView(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Patient Directory</h3>
+            <button class="btn btn-primary" style="width:auto;" onclick="openAddPatientModal()">+ Register New Patient</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Patient ID</th><th>Name</th><th>DOB</th><th>Gender</th><th>Blood Group</th><th>Phone</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              ${DB.patients.map(p => `
+                <tr>
+                  <td><strong>${p.id}</strong></td>
+                  <td>${p.name}</td>
+                  <td>${p.dob}</td>
+                  <td>${p.gender}</td>
+                  <td><span class="badge badge-danger">${p.bloodGroup}</span></td>
+                  <td>${p.phone}</td>
+                  <td>
+                    <button class="btn btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.75rem;" onclick="viewPatientHistory('${p.id}')">Medical History</button>
+                  </td>
+                  <td>
+                  <td>
+                    <button
+                    class="btn btn-danger"
+                    onclick="deletePatient('${p.id}')">
+                    Delete
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function openAddPatientModal() {
+      document.getElementById('modal-title').innerText = 'Register New Patient';
+      document.getElementById('modal-body').innerHTML = `
+        <form onsubmit="savePatient(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="p-name" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Date of Birth</label>
+              <input type="date" id="p-dob" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Gender</label>
+              <select id="p-gender" class="form-control"><option>Male</option><option>Female</option><option>Other</option></select>
+            </div>
+            <div class="form-group">
+              <label>Blood Group</label>
+              <select id="p-blood" class="form-control"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select>
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="text" id="p-phone" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Emergency Contact</label>
+              <input type="text" id="p-econtact" class="form-control" required>
+            </div>
+            <div class="form-group full-width">
+              <label>Residential Address</label>
+              <input type="text" id="p-address" class="form-control" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Patient Record</button>
+        </form>
+      `;
+      openModal('generic-modal');
+    }
+
+    function savePatient(e) {
+      e.preventDefault();
+      const newPat = {
+        id: 'PAT-' + Math.floor(1000 + Math.random() * 9000),
+        name: document.getElementById('p-name').value,
+        dob: document.getElementById('p-dob').value,
+        gender: document.getElementById('p-gender').value,
+        bloodGroup: document.getElementById('p-blood').value,
+        phone: document.getElementById('p-phone').value,
+        emergencyContact: document.getElementById('p-econtact').value,
+        address: document.getElementById('p-address').value
+      };
+      DB.patients.push(newPat);
+      saveDB(`Registered patient: ${newPat.id}`);
+      closeModal('generic-modal');
+      navigateTo('patients');
+    }
+
+    function viewPatientHistory(patId) {
+      const records = DB.medicalRecords.filter(m => m.patientId === patId);
+      const patient = DB.patients.find(p => p.id === patId);
+
+      document.getElementById('modal-title').innerText = `Medical History: ${patient.name} (${patient.id})`;
+      document.getElementById('modal-body').innerHTML = `
+        ${records.length === 0 ? '<p>No previous clinical records found.</p>' : records.map(r => `
+          <div style="border: 1px solid var(--border); border-radius:6px; padding:1rem; margin-bottom:1rem; background:#f8fafc;">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:0.5rem;">
+              <span>${r.doctorName}</span><span>${r.date}</span>
+            </div>
+            <p><strong>Diagnosis:</strong> ${r.diagnosis}</p>
+            <p><strong>Notes:</strong> ${r.notes}</p>
+            <p><strong>Prescription:</strong> ${r.prescription}</p>
+            <p><strong>Lab Test:</strong> ${r.labTestsRequested || 'None'}</p>
+          </div>
+        `).join('')}
+      `;
+      openModal('generic-modal');
+    }
+
+    /* ==========================================================================
+       MODULE 4: DOCTOR MANAGEMENT
+       ========================================================================== */
+    function renderDoctorsView(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Consultant Doctors</h3>
+            <button class="btn btn-primary" style="width:auto;" onclick="openAddDoctorModal()">+ Add Doctor</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Doctor ID</th><th>Doctor Name</th><th>Department</th><th>Schedule</th><th>Consultation Fee (LKR)</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              ${DB.doctors.map(d => `
+                <tr>
+                  <td><strong>${d.id}</strong></td>
+                  <td>${d.name}</td>
+                  <td>${d.dept}</td>
+                  <td>${d.schedule}</td>
+                  <td>Rs. ${d.fee.toLocaleString()}</td>
+                  <td>
+                     <button
+                        class="btn btn-danger"
+                        style="width:auto;"
+                        onclick="deleteDoctor('${d.id}')">
+                        Delete
+                        </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function openAddDoctorModal() {
+      document.getElementById('modal-title').innerText = 'Add Consultant Doctor';
+      document.getElementById('modal-body').innerHTML = `
+        <form onsubmit="saveDoctor(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Doctor Name</label>
+              <input type="text" id="doc-name" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Department</label>
+              <input type="text" id="doc-dept" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Schedule Details</label>
+              <input type="text" id="doc-sched" class="form-control" placeholder="e.g. Mon-Fri 09:00-13:00" required>
+            </div>
+            <div class="form-group">
+              <label>Consultation Fee (LKR)</label>
+              <input type="number" id="doc-fee" class="form-control" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Doctor Profile</button>
+        </form>
+      `;
+      openModal('generic-modal');
+    }
+
+    function saveDoctor(e) {
+      e.preventDefault();
+      const newDoc = {
+        id: 'DOC-' + Math.floor(100 + Math.random() * 900),
+        name: document.getElementById('doc-name').value,
+        dept: document.getElementById('doc-dept').value,
+        schedule: document.getElementById('doc-sched').value,
+        fee: parseFloat(document.getElementById('doc-fee').value)
+      };
+      DB.doctors.push(newDoc);
+      saveDB(`Added doctor: ${newDoc.name}`);
+      closeModal('generic-modal');
+      navigateTo('doctors');
+    }  
+      function deleteDoctor(doctorId) {
+  // Confirm before deleting
+  const doctor = DB.doctors.find(d => d.id === doctorId);
+
+  if (!doctor) {
+    alert('Doctor not found!');
+    return;
+  }
+
+  const confirmDelete = confirm(
+    `Are you sure you want to delete Dr. ${doctor.name}?`
+  );
+
+  if (!confirmDelete) {
+    return;
+  }
+
+  // Remove the selected doctor
+  DB.doctors = DB.doctors.filter(
+    d => d.id !== doctorId
+  );
+
+  // Save changes to the database
+  saveDB(`Deleted doctor: ${doctor.name}`);
+
+  // Refresh the doctor table
+  navigateTo('doctors');
+}
+    
+
+    /* ==========================================================================
+       MODULE 5: APPOINTMENTS
+       ========================================================================== */
+    function renderAppointmentsView(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Appointment Bookings</h3>
+            <button class="btn btn-primary" style="width:auto;" onclick="openBookAppointmentModal()">+ Book Appointment</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>APT ID</th><th>Patient</th><th>Doctor</th><th>Date & Time</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              ${DB.appointments.map(a => `
+                <tr>
+                  <td><strong>${a.id}</strong></td>
+                  <td>${a.patientName}</td>
+                  <td>${a.doctorName}</td>
+                  <td>${a.date} at${a.time}</td>
+                  <td><span class="badge ${a.status === 'Scheduled' ? 'badge-info' : 'badge-danger'}">${a.status}</span></td>
+                  <td>
+                    ${a.status === 'Scheduled' ? `<button class="btn btn-danger" style="padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="cancelAppointment('${a.id}')">Cancel</button>` : 'N/A'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function openBookAppointmentModal() {
+      document.getElementById('modal-title').innerText = 'Book Patient Appointment';
+      document.getElementById('modal-body').innerHTML = `
+        <form onsubmit="saveAppointment(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Select Patient</label>
+              <select id="apt-patient" class="form-control">
+                ${DB.patients.map(p => `<option value="${p.id}">${p.name} (${p.id})</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Select Doctor</label>
+              <select id="apt-doctor" class="form-control">
+                ${DB.doctors.map(d => `<option value="${d.id}">${d.name} -${d.dept}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="apt-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Time</label>
+              <input type="time" id="apt-time" class="form-control" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Confirm Appointment</button>
+        </form>
+      `;
+      openModal('generic-modal');
+    }
+
+    function saveAppointment(e) {
+      e.preventDefault();
+      const pat = DB.patients.find(p => p.id === document.getElementById('apt-patient').value);
+      const doc = DB.doctors.find(d => d.id === document.getElementById('apt-doctor').value);
+
+      const newApt = {
+        id: 'APT-' + Math.floor(500 + Math.random() * 500),
+        patientId: pat.id,
+        patientName: pat.name,
+        doctorId: doc.id,
+        doctorName: doc.name,
+        date: document.getElementById('apt-date').value,
+        time: document.getElementById('apt-time').value,
+        status: 'Scheduled'
+      };
+      DB.appointments.push(newApt);
+      saveDB(`Booked appointment ${newApt.id} for ${pat.name}`);
+      closeModal('generic-modal');
+      navigateTo('appointments');
+    }
+
+    function cancelAppointment(aptId) {
+      const idx = DB.appointments.findIndex(a => a.id === aptId);
+      if (idx !== -1) {
+        DB.appointments[idx].status = 'Cancelled';
+        saveDB(`Cancelled appointment ${aptId}`);
+        navigateTo('appointments');
+      }
+    }
+
+    /* ==========================================================================
+       MODULE 6: ELECTRONIC MEDICAL RECORDS (EMR)
+       ========================================================================== */
+    function renderEMRView(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Consultation & Clinical Notes</h3>
+            <button class="btn btn-primary" style="width:auto;" onclick="openNewEMRModal()">+ New Consultation Note</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>EMR ID</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Diagnosis</th><th>Prescription</th></tr>
+            </thead>
+            <tbody>
+              ${DB.medicalRecords.map(m => {
+                const pat = DB.patients.find(p => p.id === m.patientId);
+                return `
+                  <tr>
+                    <td><strong>${m.id}</strong></td>
+                    <td>${pat ? pat.name : m.patientId}</td>
+                    <td>${m.doctorName}</td>
+                    <td>${m.date}</td>
+                    <td>${m.diagnosis}</td>
+                    <td>${m.prescription}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function openNewEMRModal() {
+      document.getElementById('modal-title').innerText = 'Clinical Consultation Note';
+      document.getElementById('modal-body').innerHTML = `
+        <form onsubmit="saveEMR(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Patient</label>
+              <select id="emr-patient" class="form-control">
+                ${DB.patients.map(p => `<option value="${p.id}">${p.name} (${p.id})</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Doctor</label>
+              <input type="text" id="emr-doctor" class="form-control" value="${currentUser.name}" required>
+            </div>
+            <div class="form-group full-width">
+              <label>Diagnosis</label>
+              <input type="text" id="emr-diag" class="form-control" required placeholder="e.g. Type 2 Diabetes Mellitus">
+            </div>
+            <div class="form-group full-width">
+              <label>Clinical Notes</label>
+              <textarea id="emr-notes" class="form-control" rows="2" placeholder="Patient symptoms, observations..."></textarea>
+            </div>
+            <div class="form-group full-width">
+              <label>Prescription</label>
+              <input type="text" id="emr-presc" class="form-control" placeholder="e.g. Metformin 500mg BD">
+            </div>
+            <div class="form-group full-width">
+              <label>Request Lab Test (Optional)</label>
+              <input type="text" id="emr-lab" class="form-control" placeholder="e.g. Fasting Blood Sugar">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Clinical Record</button>
+        </form>
+      `;
+      openModal('generic-modal');
+    }
+
+    function saveEMR(e) {
+      e.preventDefault();
+      const patId = document.getElementById('emr-patient').value;
+      const pat = DB.patients.find(p => p.id === patId);
+      const labReq = document.getElementById('emr-lab').value.trim();
+
+      const newEmr = {
+        id: 'EMR-' + Math.floor(900 + Math.random() * 100),
+        patientId: patId,
+        doctorName: document.getElementById('emr-doctor').value,
+        date: new Date().toISOString().split('T')[0],
+        diagnosis: document.getElementById('emr-diag').value,
+        notes: document.getElementById('emr-notes').value,
+        prescription: document.getElementById('emr-presc').value,
+        labTestsRequested: labReq
+      };
+      DB.medicalRecords.push(newEmr);
+
+      if (labReq) {
+        DB.labTests.push({
+          id: 'LAB-' + Math.floor(300 + Math.random() * 500),
+          patientId: pat.id,
+          patientName: pat.name,
+          testName: labReq,
+          status: 'Pending',
+          result: 'Awaiting laboratory entry',
+          date: new Date().toISOString().split('T')[0]
+        });
+      }
+
+      saveDB(`Created EMR record for ${pat.name}`);
+      closeModal('generic-modal');
+      navigateTo('emr');
+    }
+
+    /* ==========================================================================
+       MODULE 7: LABORATORY
+       ========================================================================== */
+    function renderLabView(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Laboratory Test Queue</h3>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Test ID</th><th>Patient</th><th>Test Name</th><th>Requested Date</th><th>Status</th><th>Results</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              ${DB.labTests.map(l => `
+                <tr>
+                  <td><strong>${l.id}</strong></td>
+                  <td>${l.patientName}</td>
+                  <td>${l.testName}</td>
+                  <td>${l.date}</td>
+                  <td><span class="badge ${l.status === 'Completed' ? 'badge-success' : 'badge-warning'}">${l.status}</span></td>
+                  <td>${l.result}</td>
+                  <td>
+                    ${l.status === 'Pending' ? `<button class="btn btn-primary" style="padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="openLabResultModal('${l.id}')">Enter Result</button>` : 'Completed'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function openLabResultModal(labId) {
+      document.getElementById('modal-title').innerText = 'Enter Test Result';
+      document.getElementById('modal-body').innerHTML = `
+        <form onsubmit="saveLabResult(event, '${labId}')">
+          <div class="form-group">
+            <label>Laboratory Result Details</label>
+            <textarea id="lab-res-text" class="form-control" rows="4" required placeholder="Type specimen results..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Test Result</button>
+        </form>
+      `;
+      openModal('generic-modal');
+    }
+
+    function saveLabResult(e, labId) {
+      e.preventDefault();
+      const idx = DB.labTests.findIndex(l => l.id === labId);
+      if (idx !== -1) {
+        DB.labTests[idx].result = document.getElementById('lab-res-text').value;
+        DB.labTests[idx].status = 'Completed';
+        saveDB(`Updated lab result for ${labId}`);
+        closeModal('generic-modal');
+        navigateTo('lab');
+      }
+    }
+
+    /* ==========================================================================
+       MODULE 8: PHARMACY
+       ========================================================================== */
+    function renderPharmacyView(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Pharmacy Inventory</h3>
+            <button class="btn btn-primary" style="width:auto;" onclick="openAddMedicineModal()">+ Add New Drug</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Item ID</th><th>Medicine Name</th><th>Batch No</th><th>Stock Qty</th><th>Unit Price (LKR)</th><th>Expiry Date</th></tr>
+            </thead>
+            <tbody>
+              ${DB.pharmacy.map(m => `
+                <tr>
+                  <td><strong>${m.id}</strong></td>
+                  <td>${m.name}</td>
+                  <td>${m.batch}</td>
+                  <td><span class="badge ${m.stock < 100 ? 'badge-danger' : 'badge-success'}">${m.stock}</span></td>
+                  <td>Rs. ${m.unitPrice.toFixed(2)}</td>
+                  <td>${m.expiry}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function openAddMedicineModal() {
+      document.getElementById('modal-title').innerText = 'Add Inventory Item';
+      document.getElementById('modal-body').innerHTML = `
+        <form onsubmit="saveMedicine(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Medicine Name</label>
+              <input type="text" id="m-name" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Batch Number</label>
+              <input type="text" id="m-batch" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Stock Quantity</label>
+              <input type="number" id="m-stock" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Unit Price (LKR)</label>
+              <input type="number" step="0.01" id="m-price" class="form-control" required>
+            </div>
+            <div class="form-group full-width">
+              <label>Expiry Date</label>
+              <input type="date" id="m-expiry" class="form-control" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Save to Inventory</button>
+        </form>
+      `;
+      openModal('generic-modal');
+    }
+
+    function saveMedicine(e) {
+      e.preventDefault();
+      const newMed = {
+        id: 'MED-' + Math.floor(800 + Math.random() * 100),
+        name: document.getElementById('m-name').value,
+        batch: document.getElementById('m-batch').value,
+        stock: parseInt(document.getElementById('m-stock').value),
+        unitPrice: parseFloat(document.getElementById('m-price').value),
+        expiry: document.getElementById('m-expiry').value
+      };
+      DB.pharmacy.push(newMed);
+      saveDB(`Added medicine: ${newMed.name}`);
+      closeModal('generic-modal');
+      navigateTo('pharmacy');
+    }
+
+    /* ==========================================================================
+       MODULE 9: BILLING & INVOICING
+       ========================================================================== */
+    function renderBillingView(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Billing & Patient Invoices</h3>
+            <button class="btn btn-primary" style="width:auto;" onclick="openCreateInvoiceModal()">+ Generate Invoice</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Invoice ID</th><th>Patient</th><th>Date</th><th>Total (LKR)</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              ${DB.billing.map(b => `
+                <tr>
+                  <td><strong>${b.id}</strong></td>
+                  <td>${b.patientName}</td>
+                  <td>${b.date}</td>
+                  <td>Rs. ${b.total.toLocaleString()}</td>
+                  <td><span class="badge ${b.status === 'Paid' ? 'badge-success' : 'badge-warning'}">${b.status}</span></td>
+                  <td>
+                    <button class="btn btn-secondary" style="padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="printInvoice('${b.id}')">Print Receipt</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function openCreateInvoiceModal() {
+      document.getElementById('modal-title').innerText = 'Generate Patient Invoice';
+      document.getElementById('modal-body').innerHTML = `
+        <form onsubmit="saveInvoice(event)">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Select Patient</label>
+              <select id="inv-patient" class="form-control">
+                ${DB.patients.map(p => `<option value="${p.id}">${p.name} (${p.id})</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Consultation Charge (LKR)</label>
+              <input type="number" id="inv-consult" class="form-control" value="0">
+            </div>
+            <div class="form-group">
+              <label>Laboratory Charge (LKR)</label>
+              <input type="number" id="inv-lab" class="form-control" value="0">
+            </div>
+            <div class="form-group">
+              <label>Pharmacy Charge (LKR)</label>
+              <input type="number" id="inv-pharmacy" class="form-control" value="0">
+            </div>
+            <div class="form-group">
+              <label>Admission / Bed Charge (LKR)</label>
+              <input type="number" id="inv-admission" class="form-control" value="0">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Generate Bill</button>
+        </form>
+      `;
+      openModal('generic-modal');
+    }
+
+    function saveInvoice(e) {
+      e.preventDefault();
+      const pat = DB.patients.find(p => p.id === document.getElementById('inv-patient').value);
+      const consult = parseFloat(document.getElementById('inv-consult').value) || 0;
+      const lab = parseFloat(document.getElementById('inv-lab').value) || 0;
+      const pharmacy = parseFloat(document.getElementById('inv-pharmacy').value) || 0;
+      const admission = parseFloat(document.getElementById('inv-admission').value) || 0;
+
+      const newInv = {
+        id: 'INV-' + Math.floor(200 + Math.random() * 500),
+        patientId: pat.id,
+        patientName: pat.name,
+        date: new Date().toISOString().split('T')[0],
+        consultationFee: consult,
+        labFee: lab,
+        pharmacyFee: pharmacy,
+        admissionFee: admission,
+        total: consult + lab + pharmacy + admission,
+        status: 'Paid'
+      };
+      DB.billing.push(newInv);
+      saveDB(`Generated invoice ${newInv.id} for ${pat.name}`);
+      closeModal('generic-modal');
+      navigateTo('billing');
+    }
+
+    function printInvoice(invId) {
+      const inv = DB.billing.find(b => b.id === invId);
+      const printArea = document.getElementById('printable-area');
+
+      printArea.innerHTML = `
+        <div style="padding: 2rem; font-family: sans-serif;">
+          <h2 style="text-align: center; color: #0284c7;">Lanka Hospital</h2>
+          <p style="text-align: center; color: #64748b;">No. 503, Hospital Road, Colombo 7, Sri Lanka</p>
+          <hr style="margin: 1rem 0;">
+          <h3>OFFICIAL RECEIPT</h3>
+          <p><strong>Invoice ID:</strong> ${inv.id}</p>
+          <p><strong>Patient Name:</strong> ${inv.patientName}</p>
+          <p><strong>Date:</strong> ${inv.date}</p>
+          <br>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid #000; text-align: left;">
+                <th>Description</th><th style="text-align: right;">Amount (LKR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Consultation Fee</td><td style="text-align: right;">${inv.consultationFee.toFixed(2)}</td></tr>
+              <tr><td>Laboratory Charges</td><td style="text-align: right;">${inv.labFee.toFixed(2)}</td></tr>
+              <tr><td>Pharmacy Charges</td><td style="text-align: right;">${inv.pharmacyFee.toFixed(2)}</td></tr>
+              <tr><td>Admission Charges</td><td style="text-align: right;">${inv.admissionFee.toFixed(2)}</td></tr>
+              <tr style="border-top: 2px solid #000; font-weight: bold;">
+                <td>TOTAL PAID</td><td style="text-align: right;">Rs. ${inv.total.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+          <br><br>
+          <p style="text-align: center; font-size: 0.85rem; color: #64748b;">Thank you. Get Well Soon!</p>
+        </div>
+      `;
+      window.print();
+    }
+
+    /* ==========================================================================
+       MODULE 10: STAFF MANAGEMENT
+       ========================================================================== */
+    function renderStaffView(container) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Employee Attendance & Staff</h3>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Employee ID</th><th>Employee Name</th><th>Role</th><th>Today Status</th><th>Leave Count</th></tr>
+            </thead>
+            <tbody>
+              ${DB.employees.map(e => `
+                <tr>
+                  <td><strong>${e.id}</strong></td>
+                  <td>${e.name}</td>
+                  <td>${e.role}</td>
+                  <td><span class="badge ${e.status === 'Present' ? 'badge-success' : 'badge-danger'}">${e.status}</span></td>
+                  <td>${e.leaveDays} Days</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    /* ==========================================================================
+       MODULE 11: REPORTS & ANALYTICS
+       ========================================================================== */
+    function renderReportsView(container) {
+      const totalRev = DB.billing.reduce((acc, c) => acc + c.total, 0);
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">System Performance Summary</h3></div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border);">
+              <h4>Total Revenue Realized</h4>
+              <p style="font-size: 2rem; font-weight: bold; color: var(--success); margin-top: 0.5rem;">Rs. ${totalRev.toLocaleString()}</p>
+            </div>
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border);">
+              <h4>Total Clinical Prescriptions</h4>
+              <p style="font-size: 2rem; font-weight: bold; color: var(--primary); margin-top: 0.5rem;">${DB.medicalRecords.length}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
